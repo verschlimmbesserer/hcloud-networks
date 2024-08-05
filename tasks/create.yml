@@ -1,0 +1,37 @@
+---
+
+- name: "Set facts for Network {{ network_item }}"
+  ansible.builtin.set_fact:
+    network: "{{ hcloud_networks[network_item] }}"
+
+- name: HCloud create Network {{ network_item }}
+  hetzner.hcloud.network:
+    api_token: "{{ hcloud_api_token }}"
+    name: "{{ network_item }}"
+    ip_range: "{{ network.ip_range }}"
+    state: present
+    delete_protection: "{{ network.delete_protection | default(hcloud_networks_defaults.delete_protection) }}"
+    labels: "{{ network.labels | default(omit) }}"
+  when: network.state | default(hcloud_networks_defaults_network_state) == "present"
+
+- name: HCloud create Subnets for {{ network_item }}
+  hetzner.hcloud.subnetwork:
+    api_token: "{{ hcloud_api_token }}"
+    network: "{{ network_item }}"
+    ip_range: "{{ item.ip_range }}"
+    network_zone: "{{ item.network_zone }}"
+    type: "{{ item.type }}"
+    vswitch_id: "{{ item.vswitch_id | default(omit) }}"
+    state: present
+  loop: "{{ network.subnets }}"
+  when: network.subnets | default([]) and item.state | default(hcloud_networks_defaults_subnet_state) == 'present'
+
+- name: HCloud create Routes for {{ network_item }}
+  hetzner.hcloud.route:
+    api_token: "{{ hcloud_api_token }}"
+    network: "{{ network_item }}"
+    destination: "{{ item.destination }}"
+    gateway: "{{ item.gateway }}"
+    state: present
+  loop: "{{ network.routes }}"
+  when: network.routes | default([]) and item.state | default(hcloud_networks_defaults_route_state) == 'present'

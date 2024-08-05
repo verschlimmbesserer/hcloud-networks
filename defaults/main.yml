@@ -1,0 +1,26 @@
+---
+# defaults file for hcloud-network
+
+hcloud_networks_defaults:
+  delete_protection: true
+  network_state: present
+  subnet_state: present
+  route_state: present
+
+hcloud_networks:
+  infra:
+    ip_range: "10.0.0.0/16"
+    labels:
+      infra: true
+    subnets:
+      - ip_range: "10.1.0.0/24"
+        network-zone: eu-central
+        type: cloud
+        state: present
+      - ip_range: 10.0.1.0/24
+        network_zone: eu-central
+        type: vswitch
+        vswitch_id: 33130
+        state: present
+    # routes:
+    #   -
